@@ -83,6 +83,8 @@ func (u *User) ReceiveMessage(ctx context.Context) error {
 		if strings.HasPrefix(sendMsg.Content, "@") {
 			sendMsg.ToUser = strings.SplitN(sendMsg.Content, " ", 2)[0][1:]
 		}
+		sendMsg.Content = FilterSensitive(sendMsg.Content)
+
 		reg := regexp.MustCompile(`@[^\s@]{2,20}`)
 		sendMsg.AtsUser = reg.FindAllString(sendMsg.Content, -1)
 
