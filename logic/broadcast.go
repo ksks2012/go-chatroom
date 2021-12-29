@@ -1,6 +1,9 @@
 package logic
 
-import "log"
+import (
+	"log"
+	"sync"
+)
 
 const (
 	MessageQueueLen = 8
@@ -71,25 +74,25 @@ func (b *broadcaster) Start() {
 	}
 }
 
-func (b *broadcaster) EnteringChannel() chan<- *User {
-	return b.enteringChannel
+func (b *broadcaster) UserEntering(u *User) {
+	b.enteringChannel <- u
 }
 
-func (b *broadcaster) LeavingChannel() chan<- *User {
-	return b.leavingChannel
+func (b *broadcaster) UserLeaving(u *User) {
+	b.leavingChannel <- u
 }
 
-func (b *broadcaster) MessageChannel() chan<- *Message {
-	return b.messageChannel
+func (b *broadcaster) Broadcast(msg *Message) {
+	b.messageChannel <- msg
 }
 
-func (b *broadcaster) CheckUserChannel() chan<- string {
-	return b.checkUserChannel
+func (b *broadcaster) CanEnterRoom(nickname string) bool {
+	b.checkUserChannel <- nickname
+
+	return <-b.checkUserCanInChannel
 }
 
-func (b *broadcaster) CheckUserCanInChannel() <-chan bool {
-	return b.checkUserCanInChannel
-}
+var locker sync.RWMutex
 
 func (b *broadcaster) sendUserList() {
 	// To avoid deadlock, there is the possibility that the list that the user sees is not updated in time

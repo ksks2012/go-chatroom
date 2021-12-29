@@ -78,6 +78,6 @@ func (u *User) ReceiveMessage(ctx context.Context) error {
 
 		// Send content to chat room
 		sendMsg := NewMessage(u, receiveMsg["content"])
-		Broadcaster.MessageChannel() <- sendMsg
+		Broadcaster.Broadcast(sendMsg)
 	}
 }

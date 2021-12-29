@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/go-chatroom/global"
 	"github.com/go-chatroom/server"
 )
 
@@ -20,6 +21,10 @@ var (
 GChat Room：%s
 `
 )
+
+func init() {
+	global.Init()
+}
 
 func main() {
 	fmt.Printf(banner+"\n", addr)

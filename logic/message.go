@@ -29,11 +29,11 @@ func NewMessage(user *User, content string) *Message {
 	}
 }
 
-func NewWelcomeMessage(nickname string) *Message {
+func NewWelcomeMessage(user *User) *Message {
 	return &Message{
 		User:    SystemUser,
 		Type:    MsgTypeSystem,
-		Content: nickname + " Hello, welcome to the chat room!",
+		Content: user.NickName + " Hello, welcome to the chat room!",
 		MsgTime: time.Now(),
 	}
 }

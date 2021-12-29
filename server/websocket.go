@@ -22,14 +22,14 @@ func WebSocketHandleFunc(w http.ResponseWriter, req *http.Request) {
 
 	// 1. A new user comes in and builds an instance of that user
 	nickname := req.FormValue("nickname")
-	logic.Broadcaster.CheckUserChannel() <- nickname
-	if l := len(nickname); l < 2 || l > 20 {
-		log.Println("nickname illegal: ", nickname)
-		wsjson.Write(req.Context(), conn, logic.NewErrorMessage("Illegal nickname, nickname length: 4-20"))
-		conn.Close(websocket.StatusUnsupportedData, "nickname illegal!")
-		return
-	}
-	if !<-logic.Broadcaster.CheckUserCanInChannel() {
+	// logic.Broadcaster.CheckUserChannel(nickname) <- nickname
+	// if l := len(nickname); l < 2 || l > 20 {
+	// 	log.Println("nickname illegal: ", nickname)
+	// 	wsjson.Write(req.Context(), conn, logic.NewErrorMessage("Illegal nickname, nickname length: 4-20"))
+	// 	conn.Close(websocket.StatusUnsupportedData, "nickname illegal!")
+	// 	return
+	// }
+	if !logic.Broadcaster.CanEnterRoom(nickname) {
 		log.Println("Nickname already exists:", nickname)
 		wsjson.Write(req.Context(), conn, logic.NewErrorMessage("The nickname already exists!"))
 		conn.Close(websocket.StatusUnsupportedData, "nickname exists!")
@@ -42,24 +42,24 @@ func WebSocketHandleFunc(w http.ResponseWriter, req *http.Request) {
 	go user.SendMessage(req.Context())
 
 	// 3. Send a welcome message to the current user
-	user.MessageChannel <- logic.NewWelcomeMessage(nickname)
+	user.MessageChannel <- logic.NewWelcomeMessage(user)
 	log.Println("New User:", nickname)
 
 	// Notify all users of the arrival of new users
 	msg := logic.NewNoticeMessage(nickname + "Joined the chat room")
-	logic.Broadcaster.MessageChannel() <- msg
+	logic.Broadcaster.Broadcast(msg)
 
 	// 4. Add this user to the user list of the broadcaster
-	logic.Broadcaster.EnteringChannel() <- user
+	logic.Broadcaster.UserEntering(user)
 	log.Println("user:", nickname, "joins chat")
 
 	// 5. Receive user messages
 	err = user.ReceiveMessage(req.Context())
 
 	// 6. User left
-	logic.Broadcaster.LeavingChannel() <- user
+	logic.Broadcaster.UserLeaving(user)
 	msg = logic.NewNoticeMessage(user.NickName + " Left the chat room")
-	logic.Broadcaster.MessageChannel() <- msg
+	logic.Broadcaster.Broadcast(msg)
 	log.Println("user:", nickname, "leaves chat")
 
 	// Execute different Close according to the error during reading
