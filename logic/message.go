@@ -10,6 +10,9 @@ type Message struct {
 	Content string    `json:"content"`
 	MsgTime time.Time `json:"msg_time"`
 
+	ToUser  string   `json:"to_user"`
+	AtsUser []string `json:"ats_user"`
+
 	Users map[string]*User `json:"users"`
 }
 

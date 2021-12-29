@@ -3,7 +3,9 @@ package logic
 import (
 	"context"
 	"errors"
+	"regexp"
 	"strconv"
+	"strings"
 	"sync/atomic"
 	"time"
 
@@ -78,6 +80,12 @@ func (u *User) ReceiveMessage(ctx context.Context) error {
 
 		// Send content to chat room
 		sendMsg := NewMessage(u, receiveMsg["content"])
+		if strings.HasPrefix(sendMsg.Content, "@") {
+			sendMsg.ToUser = strings.SplitN(sendMsg.Content, " ", 2)[0][1:]
+		}
+		reg := regexp.MustCompile(`@[^\s@]{2,20}`)
+		sendMsg.AtsUser = reg.FindAllString(sendMsg.Content, -1)
+
 		Broadcaster.Broadcast(sendMsg)
 	}
 }

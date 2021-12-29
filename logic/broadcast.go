@@ -2,7 +2,6 @@ package logic
 
 import (
 	"log"
-	"sync"
 )
 
 const (
@@ -58,11 +57,21 @@ func (b *broadcaster) Start() {
 			b.sendUserList()
 		case msg := <-b.messageChannel:
 			// send message to all users
-			for _, user := range b.users {
-				if user.UID == msg.User.UID {
-					continue
+			if msg.ToUser == "" {
+				// Send a message to all online users
+				for _, user := range b.users {
+					if user.UID == msg.User.UID {
+						continue
+					}
+					user.MessageChannel <- msg
 				}
-				user.MessageChannel <- msg
+			} else {
+				if user, ok := b.users[msg.ToUser]; ok {
+					user.MessageChannel <- msg
+				} else {
+					// The other party is not online or the user does not exist, just ignore the message
+					log.Println("user:", msg.ToUser, "not exists!")
+				}
 			}
 		case nickname := <-b.checkUserChannel:
 			if _, ok := b.users[nickname]; ok {
@@ -91,8 +100,6 @@ func (b *broadcaster) CanEnterRoom(nickname string) bool {
 
 	return <-b.checkUserCanInChannel
 }
-
-var locker sync.RWMutex
 
 func (b *broadcaster) sendUserList() {
 	// To avoid deadlock, there is the possibility that the list that the user sees is not updated in time
