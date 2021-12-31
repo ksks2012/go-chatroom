@@ -5,3 +5,5 @@ sensitive:
   - 傻子
   - 傻大個
   - 傻人
+offline-num: 10
+token-secret: "token-secret"

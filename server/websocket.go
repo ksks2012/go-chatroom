@@ -21,6 +21,7 @@ func WebSocketHandleFunc(w http.ResponseWriter, req *http.Request) {
 	}
 
 	// 1. A new user comes in and builds an instance of that user
+	token := req.FormValue("token")
 	nickname := req.FormValue("nickname")
 	// logic.Broadcaster.CheckUserChannel(nickname) <- nickname
 	// if l := len(nickname); l < 2 || l > 20 {
@@ -36,7 +37,7 @@ func WebSocketHandleFunc(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	user := logic.NewUser(conn, nickname, req.RemoteAddr)
+	user := logic.NewUser(conn, token, nickname, req.RemoteAddr)
 
 	// 2. Turn on the goroutine that sends messages to users
 	go user.SendMessage(req.Context())
