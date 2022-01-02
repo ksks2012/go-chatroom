@@ -1,12 +1,21 @@
 package logic
 
 import (
+	"expvar"
+	"fmt"
 	"log"
+
+	"github.com/go-chatroom/global"
 )
 
-const (
-	MessageQueueLen = 8
-)
+func init() {
+	expvar.Publish("message_queue", expvar.Func(calcMessageQueueLen))
+}
+
+func calcMessageQueueLen() interface{} {
+	fmt.Println("===len=:", len(Broadcaster.messageChannel))
+	return len(Broadcaster.messageChannel)
+}
 
 // logic/broadcast.go
 // broadcaster
@@ -30,7 +39,7 @@ var Broadcaster = &broadcaster{
 
 	enteringChannel: make(chan *User),
 	leavingChannel:  make(chan *User),
-	messageChannel:  make(chan *Message, MessageQueueLen),
+	messageChannel:  make(chan *Message, global.MessageQueueLen),
 
 	checkUserChannel:      make(chan string),
 	checkUserCanInChannel: make(chan bool),
@@ -107,7 +116,7 @@ func (b *broadcaster) CanEnterRoom(nickname string) bool {
 
 func (b *broadcaster) sendUserList() {
 	// To avoid deadlock, there is the possibility that the list that the user sees is not updated in time
-	if len(b.messageChannel) < MessageQueueLen {
+	if len(b.messageChannel) < global.MessageQueueLen {
 		b.messageChannel <- NewUserListMessage(b.users)
 	} else {
 		log.Println("The concurrency of messages is too large, causing MessageChannel congestion. . .")

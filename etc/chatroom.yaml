@@ -7,3 +7,4 @@ sensitive:
   - 傻人
 offline-num: 10
 token-secret: "token-secret"
+message_queue_len: 1024
