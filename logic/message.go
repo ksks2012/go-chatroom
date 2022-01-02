@@ -19,7 +19,7 @@ type Message struct {
 	ToUser  string   `json:"to_user"`
 	AtsUser []string `json:"ats_user"`
 
-	Users map[string]*User `json:"users"`
+	Users []*User `json:"users"`
 }
 
 const (
@@ -69,7 +69,7 @@ func NewErrorMessage(content string) *Message {
 	}
 }
 
-func NewUserListMessage(users map[string]*User) *Message {
+func NewUserListMessage(users []*User) *Message {
 	return &Message{
 		User:    SystemUser,
 		Type:    MsgTypeUserList,

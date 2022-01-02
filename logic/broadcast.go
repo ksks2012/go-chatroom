@@ -116,9 +116,16 @@ func (b *broadcaster) CanEnterRoom(nickname string) bool {
 
 func (b *broadcaster) sendUserList() {
 	// To avoid deadlock, there is the possibility that the list that the user sees is not updated in time
-	if len(b.messageChannel) < global.MessageQueueLen {
-		b.messageChannel <- NewUserListMessage(b.users)
-	} else {
-		log.Println("The concurrency of messages is too large, causing MessageChannel congestion. . .")
+	userList := make([]*User, 0, len(b.users))
+	for _, user := range b.users {
+		userList = append(userList, user)
 	}
+
+	go func() {
+		if len(b.messageChannel) < global.MessageQueueLen {
+			b.messageChannel <- NewUserListMessage(userList)
+		} else {
+			log.Println("The concurrency of messages is too large, causing MessageChannel congestion. . .")
+		}
+	}()
 }
