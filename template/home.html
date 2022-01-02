@@ -40,7 +40,7 @@
             <div>Chat content</div>
             <div class="msg-list" id="msg-list">
                 <div class="message" v-for="msg in msglist" v-bind:class="{ system: msg.type==1, myself: msg.user.nickname==nickname }">
-                    <div class="meta" v-if="msg.user.nickname"><span class="author">${ msg.user.nickname }</span> at ${ formatDate(msg.msg_time) }</div>
+                    <div class="meta" v-if="msg.user.nickname"><span class="author">${ msg.user.nickname }</span> at ${ formatDate(msg.msg_time) } ${ calc(msg) }</div>
                     <div>
                         <span class="content" style="white-space: pre-wrap;">${ msg.content }</span>
                     </div>
@@ -198,6 +198,19 @@
             formatDate: function (dateStr) {
                 let d = new Date(dateStr);
                 return d.toLocaleTimeString();
+            },
+            calc: function (msg) {
+                if (typeof msg.client_send_time == "undefined") {
+                    return '';
+                }
+
+                let send = new Date(msg.client_send_time)
+                let receive = new Date(msg.msg_time)
+                if (send.getFullYear() == 1) {
+                    return '';
+                }
+                let elaspe = receive.getTime() - send.getTime();
+                return "spent " + elaspe + "ms";
             },
 
             addMsg2List: function (data) {
