@@ -1,6 +1,10 @@
 package logic
 
-import "time"
+import (
+	"time"
+
+	"github.com/spf13/cast"
+)
 
 // Message sent to the user
 type Message struct {
@@ -9,6 +13,8 @@ type Message struct {
 	Type    int       `json:"type"`
 	Content string    `json:"content"`
 	MsgTime time.Time `json:"msg_time"`
+
+	ClientSendTime time.Time `json:"client_send_time"`
 
 	ToUser  string   `json:"to_user"`
 	AtsUser []string `json:"ats_user"`
@@ -23,13 +29,17 @@ const (
 	MsgTypeUserList        // Send the current user list
 )
 
-func NewMessage(user *User, content string) *Message {
-	return &Message{
+func NewMessage(user *User, content string, clientTime string) *Message {
+	message := &Message{
 		User:    user,
 		Type:    MsgTypeNormal,
 		Content: content,
 		MsgTime: time.Now(),
 	}
+	if clientTime != "" {
+		message.ClientSendTime = time.Unix(0, cast.ToInt64(clientTime))
+	}
+	return message
 }
 
 func NewWelcomeMessage(user *User) *Message {

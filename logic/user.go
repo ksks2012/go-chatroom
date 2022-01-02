@@ -7,7 +7,6 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"log"
 	"regexp"
 	"strconv"
 	"strings"
@@ -99,7 +98,7 @@ func (u *User) ReceiveMessage(ctx context.Context) error {
 		}
 
 		// Send content to chat room
-		sendMsg := NewMessage(u, receiveMsg["content"])
+		sendMsg := NewMessage(u, receiveMsg["content"], receiveMsg["send_time"])
 		if strings.HasPrefix(sendMsg.Content, "@") {
 			sendMsg.ToUser = strings.SplitN(sendMsg.Content, " ", 2)[0][1:]
 		}
@@ -117,7 +116,6 @@ func genToken(uid int, nickname string) string {
 	message := fmt.Sprintf("%s%s%d", nickname, secret, uid)
 
 	messageMAC := macSha256([]byte(message), []byte(secret))
-	log.Printf("%suid%d", base64.StdEncoding.EncodeToString(messageMAC), uid)
 	return fmt.Sprintf("%suid%d", base64.StdEncoding.EncodeToString(messageMAC), uid)
 }
 
