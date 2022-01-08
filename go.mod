@@ -10,5 +10,6 @@ require (
 	github.com/spf13/cast v1.4.1 // indirect
 	github.com/spf13/viper v1.10.1 // indirect
 	github.com/xordataexchange/crypt v0.0.3-0.20170626215501-b2862e3d0a77 // indirect
+	golang.org/x/sys v0.0.0-20211210111614-af8b64212486 // indirect
 	nhooyr.io/websocket v1.8.7
 )

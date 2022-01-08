@@ -23,10 +23,11 @@ type Message struct {
 }
 
 const (
-	MsgTypeNormal   = iota // normal user message
-	MsgTypeSystem          // System message
-	MsgTypeError           // error message
-	MsgTypeUserList        // Send the current user list
+	MsgTypeNormal    = iota // normal user message
+	MsgTypeWelcome          // Current user welcome message
+	MsgTypeUserEnter        // User enter
+	MsgTypeUserLeave        // User exit
+	MsgTypeError            // error message
 )
 
 func NewMessage(user *User, content string, clientTime string) *Message {
@@ -45,17 +46,26 @@ func NewMessage(user *User, content string, clientTime string) *Message {
 func NewWelcomeMessage(user *User) *Message {
 	return &Message{
 		User:    SystemUser,
-		Type:    MsgTypeSystem,
+		Type:    MsgTypeWelcome,
 		Content: user.NickName + " Hello, welcome to the chat room!",
 		MsgTime: time.Now(),
 	}
 }
 
-func NewNoticeMessage(content string) *Message {
+func NewUserEnterMessage(user *User) *Message {
 	return &Message{
-		User:    SystemUser,
-		Type:    MsgTypeSystem,
-		Content: content,
+		User:    user,
+		Type:    MsgTypeUserEnter,
+		Content: user.NickName + " join chat room",
+		MsgTime: time.Now(),
+	}
+}
+
+func NewUserLeaveMessage(user *User) *Message {
+	return &Message{
+		User:    user,
+		Type:    MsgTypeUserLeave,
+		Content: user.NickName + " leave chat room",
 		MsgTime: time.Now(),
 	}
 }
@@ -63,17 +73,8 @@ func NewNoticeMessage(content string) *Message {
 func NewErrorMessage(content string) *Message {
 	return &Message{
 		User:    SystemUser,
-		Type:    MsgTypeSystem,
+		Type:    MsgTypeError,
 		Content: content,
 		MsgTime: time.Now(),
-	}
-}
-
-func NewUserListMessage(users []*User) *Message {
-	return &Message{
-		User:    SystemUser,
-		Type:    MsgTypeUserList,
-		MsgTime: time.Now(),
-		Users:   users,
 	}
 }

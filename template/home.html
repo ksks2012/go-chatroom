@@ -89,18 +89,23 @@
         data: {
             msglist: [],
             content: "",
-            nickname: "",
+            curUser: {
+                uid: 0,
+                nickname: '',
+                token: '',
+            },
             usertip: "Haven't entered the chat room yet, please fill in your nickname below",
 
             // Have you joined the chat room
             joined: false,
 
             users: [],
+            indexMap: {},
         },
         mounted: function () {
-            let nickname = localStorage.getItem("nickname");
-            if (nickname) {
-                this.nickname = nickname;
+            let user = localStorage.getItem("user");
+            if (user) {
+                this.curUser = JSON.parse(user);
                 this.joinchat();
             }
 
@@ -137,18 +142,38 @@
 
                     gWS.onmessage = function (evt) {
                         let data = JSON.parse(evt.data);
-                        if (data.type == 2) {
-                            that.usertip = "The user nickname already exists, please change one!"
+                        if (data.type == 4) {
+                            that.usertip = data.content;
                             that.joined = false;
+                            return;
+                        } else if (data.type == 1) {
+                            // welcome message
+                            that.curUser = data.user;
+                            localStorage.setItem('user', JSON.stringify(data.user));
+
+                            data.user = { nickname: '', uid: 0 };
+
+                            that.fetchUserList();
+                        } else if (data.type == 2) {
+                            // a user enters
+                            let user = data.user;
+                            let len = that.users.length;
+                            that.users.push(user);
+                            that.indexMap[user.nickname] = len;
                         } else if (data.type == 3) {
-                            // user list
-                            that.users.splice(0);
-                            for (let nickname in data.users) {
-                                that.users.push(data.users[nickname]);
+                            // a user exits
+                            let nickname = data.user.nickname;
+                            let idx = that.indexMap[nickname];
+
+                            that.users.splice(idx, 1);
+
+                            for (let i = idx; i < that.users.length; i++) {
+                                let nickname = that.users[i].nickname;
+                                that.indexMap[nickname] = i;
                             }
-                        } else {
-                            that.addMsg2List(data);
                         }
+
+                        that.addMsg2List(data);
                     };
 
                     gWS.onerror = function (evt) {
@@ -165,14 +190,17 @@
                 }
             },
             leavechat: function () {
-                localStorage.removeItem("nickname");
                 gWS.close();
+
+                that.msglist.splice(0);
 
                 this.addMsg2List({
                     user: { nickname: "" },
                     type: 1,
                     content: 'You have left the chat room, goodbye! ',
                 });
+
+                this.users.splice(0);
 
                 this.joined = false;
             },
@@ -190,6 +218,32 @@
 
                 this.addMsg2List(data);
                 this.content = "";
+            },
+            fetchUserList: function () {
+                let that = this;
+                // The XMLHttpRequest object is used to exchange data with the server in the background
+                var xhr = new XMLHttpRequest();
+                //The onreadystatechange function will be triggered whenever the readyState changes
+                //0: The request is not initialized
+                //1: Server connection has been established
+                //2: The request has been received
+                //3: request processing
+                //4: The request has been completed and the response is ready
+                xhr.open('GET', '/user_list', true)
+                xhr.onreadystatechange = function () {
+                    //readyStatus == 4 indicates that the request has been completed
+                    if (xhr.readyState == 4 && xhr.status == 200) {
+                        that.users.splice(0);
+                        let users = JSON.parse(xhr.responseText);
+                        for (let i in users) {
+                            let user = users[i];
+                            that.indexMap[user.nickname] = that.users.length;
+                            that.users.push(user);
+                        }
+                    }
+                };
+                //send data
+                xhr.send();
             },
             // newline
             lineFeed: function (evt) {
@@ -217,21 +271,32 @@
                 if (data.content == "") {
                     return;
                 }
+
                 that = this;
-                if (data.ats_user != null) {
-                    data.ats_user.forEach(function (nickname) {
+                if (data.ats != null) {
+                    data.ats.forEach(function (nickname) {
                         if (nickname == '@' + that.nickname) {
-                            that.usertip = 'Someone @ you';
+                            that.usertip = 'Someone @ You';
                         }
                     })
                 }
+
+                data.receive_time = new Date();
+
+                if (this.msglist.length > 80) {
+                    this.msglist.splice(0, 40);
+                }
+
                 this.msglist.push(data);
 
-                // Need to wait for rendering?
-                setTimeout(function () {
+                Vue.nextTick(function () {
                     let msgList = document.querySelector('#msg-list');
                     msgList.scrollTop = msgList.scrollHeight;
-                }, 1);
+                })
+
+                setTimeout(function () {
+                    that.usertip = '';
+                }, 5000);
             },
 
             // keep alive

@@ -32,6 +32,10 @@ type broadcaster struct {
 	//Determine whether the user with the nickname can enter the chat room (duplicate or not): true => yes, false => no
 	checkUserChannel      chan string
 	checkUserCanInChannel chan bool
+
+	// get user list
+	requestUsersChannel chan struct{}
+	usersChannel        chan []*User
 }
 
 var Broadcaster = &broadcaster{
@@ -43,6 +47,9 @@ var Broadcaster = &broadcaster{
 
 	checkUserChannel:      make(chan string),
 	checkUserCanInChannel: make(chan bool),
+
+	requestUsersChannel: make(chan struct{}),
+	usersChannel:        make(chan []*User),
 }
 
 // logic/broadcast.go
@@ -56,16 +63,12 @@ func (b *broadcaster) Start() {
 			// new user enters
 			b.users[user.NickName] = user
 
-			b.sendUserList()
-
 			OfflineProcessor.Send(user)
 		case user := <-b.leavingChannel:
 			// user leaves
 			delete(b.users, user.NickName)
 			// Avoid goroutine leaks
 			user.CloseMessageChannel()
-
-			b.sendUserList()
 		case msg := <-b.messageChannel:
 			// send message to all users
 			if msg.ToUser == "" {
@@ -84,7 +87,6 @@ func (b *broadcaster) Start() {
 					log.Println("user:", msg.ToUser, "not exists!")
 				}
 			}
-
 			OfflineProcessor.Save(msg)
 		case nickname := <-b.checkUserChannel:
 			if _, ok := b.users[nickname]; ok {
@@ -92,6 +94,15 @@ func (b *broadcaster) Start() {
 			} else {
 				b.checkUserCanInChannel <- true
 			}
+
+		case <-b.requestUsersChannel:
+			userList := make([]*User, 0, len(b.users))
+			for _, user := range b.users {
+				userList = append(userList, user)
+			}
+			log.Printf("%v", userList)
+
+			b.usersChannel <- userList
 		}
 	}
 }
@@ -105,6 +116,9 @@ func (b *broadcaster) UserLeaving(u *User) {
 }
 
 func (b *broadcaster) Broadcast(msg *Message) {
+	if len(b.messageChannel) >= global.MessageQueueLen {
+		log.Println("broadcast queue full, message dropped")
+	}
 	b.messageChannel <- msg
 }
 
@@ -114,18 +128,7 @@ func (b *broadcaster) CanEnterRoom(nickname string) bool {
 	return <-b.checkUserCanInChannel
 }
 
-func (b *broadcaster) sendUserList() {
-	// To avoid deadlock, there is the possibility that the list that the user sees is not updated in time
-	userList := make([]*User, 0, len(b.users))
-	for _, user := range b.users {
-		userList = append(userList, user)
-	}
-
-	go func() {
-		if len(b.messageChannel) < global.MessageQueueLen {
-			b.messageChannel <- NewUserListMessage(userList)
-		} else {
-			log.Println("The concurrency of messages is too large, causing MessageChannel congestion. . .")
-		}
-	}()
+func (b *broadcaster) GetUserList() []*User {
+	b.requestUsersChannel <- struct{}{}
+	return <-b.usersChannel
 }

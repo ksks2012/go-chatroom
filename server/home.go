@@ -1,11 +1,14 @@
 package server
 
 import (
+	"encoding/json"
 	"fmt"
 	"html/template"
 	"net/http"
 	"os"
 	"path/filepath"
+
+	"github.com/go-chatroom/logic"
 )
 
 func homeHandleFunc(w http.ResponseWriter, req *http.Request) {
@@ -44,4 +47,18 @@ func inferRootDir() {
 func exists(filename string) bool {
 	_, err := os.Stat(filename)
 	return err == nil || os.IsExist(err)
+}
+
+func userListHandleFunc(w http.ResponseWriter, req *http.Request) {
+	w.Header().Add("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+
+	userList := logic.Broadcaster.GetUserList()
+	b, err := json.Marshal(userList)
+
+	if err != nil {
+		fmt.Fprint(w, `[]`)
+	} else {
+		fmt.Fprint(w, string(b))
+	}
 }

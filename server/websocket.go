@@ -47,7 +47,7 @@ func WebSocketHandleFunc(w http.ResponseWriter, req *http.Request) {
 	log.Println("New User:", nickname)
 
 	// Notify all users of the arrival of new users
-	msg := logic.NewNoticeMessage(nickname + "Joined the chat room")
+	msg := logic.NewUserEnterMessage(user)
 	logic.Broadcaster.Broadcast(msg)
 
 	// 4. Add this user to the user list of the broadcaster
@@ -59,7 +59,7 @@ func WebSocketHandleFunc(w http.ResponseWriter, req *http.Request) {
 
 	// 6. User left
 	logic.Broadcaster.UserLeaving(user)
-	msg = logic.NewNoticeMessage(user.NickName + " Left the chat room")
+	msg = logic.NewUserLeaveMessage(user)
 	logic.Broadcaster.Broadcast(msg)
 	log.Println("user:", nickname, "leaves chat")
 
