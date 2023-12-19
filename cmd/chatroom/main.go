@@ -2,12 +2,12 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 
 	_ "net/http/pprof"
 
 	"github.com/go-chatroom/global"
+	log "github.com/go-chatroom/pkg/logger"
 	"github.com/go-chatroom/server"
 )
 
@@ -33,5 +33,5 @@ func main() {
 
 	server.RegisterHandle()
 
-	log.Fatal(http.ListenAndServe(addr, nil))
+	log.Logger.Err(http.ListenAndServe(addr, nil))
 }

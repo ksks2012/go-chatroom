@@ -1,13 +1,13 @@
 package server
 
 import (
-	"log"
+	"fmt"
 	"net/http"
 
+	"github.com/go-chatroom/logic"
+	log "github.com/go-chatroom/pkg/logger"
 	"nhooyr.io/websocket"
 	"nhooyr.io/websocket/wsjson"
-
-	"github.com/go-chatroom/logic"
 )
 
 func WebSocketHandleFunc(w http.ResponseWriter, req *http.Request) {
@@ -16,7 +16,7 @@ func WebSocketHandleFunc(w http.ResponseWriter, req *http.Request) {
 	// In other words, by default, it does not allow cross-origin requests. If an error occurs, Accept will always write an appropriate response
 	conn, err := websocket.Accept(w, req, nil)
 	if err != nil {
-		log.Println("websocket accept error:", err)
+		log.Logger.Error().Msg(fmt.Sprintf("Websocket accept error: %v", err))
 		return
 	}
 
@@ -25,13 +25,13 @@ func WebSocketHandleFunc(w http.ResponseWriter, req *http.Request) {
 	nickname := req.FormValue("nickname")
 	// logic.Broadcaster.CheckUserChannel(nickname) <- nickname
 	// if l := len(nickname); l < 2 || l > 20 {
-	// 	log.Println("nickname illegal: ", nickname)
+	// 	log.Logger.Print("nickname illegal: ", nickname)
 	// 	wsjson.Write(req.Context(), conn, logic.NewErrorMessage("Illegal nickname, nickname length: 4-20"))
 	// 	conn.Close(websocket.StatusUnsupportedData, "nickname illegal!")
 	// 	return
 	// }
 	if !logic.Broadcaster.CanEnterRoom(nickname) {
-		log.Println("Nickname already exists:", nickname)
+		log.Logger.Info().Msg(fmt.Sprintf("Nickname already exists: %v", nickname))
 		wsjson.Write(req.Context(), conn, logic.NewErrorMessage("The nickname already exists!"))
 		conn.Close(websocket.StatusUnsupportedData, "nickname exists!")
 		return
@@ -44,7 +44,7 @@ func WebSocketHandleFunc(w http.ResponseWriter, req *http.Request) {
 
 	// 3. Send a welcome message to the current user
 	user.MessageChannel <- logic.NewWelcomeMessage(user)
-	log.Println("New User:", nickname)
+	log.Logger.Info().Msg(fmt.Sprintf("New User: %v", nickname))
 
 	// Notify all users of the arrival of new users
 	msg := logic.NewUserEnterMessage(user)
@@ -52,7 +52,7 @@ func WebSocketHandleFunc(w http.ResponseWriter, req *http.Request) {
 
 	// 4. Add this user to the user list of the broadcaster
 	logic.Broadcaster.UserEntering(user)
-	log.Println("user:", nickname, "joins chat")
+	log.Logger.Info().Msg(fmt.Sprintf("user: %v joins chat", nickname))
 
 	// 5. Receive user messages
 	err = user.ReceiveMessage(req.Context())
@@ -61,13 +61,13 @@ func WebSocketHandleFunc(w http.ResponseWriter, req *http.Request) {
 	logic.Broadcaster.UserLeaving(user)
 	msg = logic.NewUserLeaveMessage(user)
 	logic.Broadcaster.Broadcast(msg)
-	log.Println("user:", nickname, "leaves chat")
+	log.Logger.Info().Msg(fmt.Sprintf("user: %v leaves chat", nickname))
 
 	// Execute different Close according to the error during reading
 	if err == nil {
 		conn.Close(websocket.StatusNormalClosure, "")
 	} else {
-		log.Println("read from client error:", err)
+		log.Logger.Error().Msg(fmt.Sprintf("Read from client error: %v", err))
 		conn.Close(websocket.StatusInternalError, "Read from client error")
 	}
 }

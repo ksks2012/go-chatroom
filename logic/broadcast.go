@@ -3,9 +3,9 @@ package logic
 import (
 	"expvar"
 	"fmt"
-	"log"
 
 	"github.com/go-chatroom/global"
+	"github.com/rs/zerolog/log"
 )
 
 func init() {
@@ -84,7 +84,7 @@ func (b *broadcaster) Start() {
 					user.MessageChannel <- msg
 				} else {
 					// The other party is not online or the user does not exist, just ignore the message
-					log.Println("user:", msg.ToUser, "not exists!")
+					log.Print("user:", msg.ToUser, "not exists!")
 				}
 			}
 			OfflineProcessor.Save(msg)
@@ -117,7 +117,7 @@ func (b *broadcaster) UserLeaving(u *User) {
 
 func (b *broadcaster) Broadcast(msg *Message) {
 	if len(b.messageChannel) >= global.MessageQueueLen {
-		log.Println("broadcast queue full, message dropped")
+		log.Print("broadcast queue full, message dropped")
 	}
 	b.messageChannel <- msg
 }

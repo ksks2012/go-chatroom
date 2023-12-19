@@ -65,7 +65,7 @@ func NewUser(conn *websocket.Conn, token, nickname, addr string) *User {
 }
 
 func (u *User) String() string {
-	return "UID:" + strconv.Itoa(u.UID) + ";nickname:" + u.NickName + ";" +
+	return "UID:" + strconv.Itoa(u.UID) + "; nickname:" + u.NickName + "; " +
 		u.EnterAt.Format("2006-01-02 15:04:05 +8000") + " Enter chat room"
 }
 

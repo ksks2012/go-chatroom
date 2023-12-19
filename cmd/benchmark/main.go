@@ -4,11 +4,11 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"log"
 	"strconv"
 	"time"
 
 	"github.com/go-chatroom/logic"
+	log "github.com/go-chatroom/pkg/logger"
 	"nhooyr.io/websocket"
 	"nhooyr.io/websocket/wsjson"
 )
@@ -42,7 +42,7 @@ func UserConnect(nickname string) {
 
 	conn, _, err := websocket.Dial(ctx, "ws://127.0.0.1:2022/ws?nickname="+nickname, nil)
 	if err != nil {
-		log.Println("Dial error:", err)
+		log.Logger.Error().Msg(fmt.Sprintf("Dial error: %v", err))
 		return
 	}
 	defer conn.Close(websocket.StatusInternalError, "Internal error!")
@@ -55,7 +55,7 @@ func UserConnect(nickname string) {
 		var message logic.Message
 		err = wsjson.Read(ctx, conn, &message)
 		if err != nil {
-			log.Println("receive msg error:", err)
+			log.Logger.Error().Msg(fmt.Sprintf("Receive msg error: %v", err))
 			continue
 		}
 
@@ -80,7 +80,7 @@ func sendMessage(conn *websocket.Conn, nickname string) {
 		}
 		err := wsjson.Write(ctx, conn, msg)
 		if err != nil {
-			log.Println("send msg error:", err, "nickname:", nickname, "no:", i)
+			log.Logger.Error().Msg(fmt.Sprintf("send msg error: %v; nickname: %v; no: %v", err, nickname, i))
 		}
 		i++
 
