@@ -11,6 +11,16 @@ import (
 
 var Logger zerolog.Logger
 
+// panic(zerolog.PanicLevel, 5)
+// fatal(zerolog.FatalLevel, 4)
+// error(zerolog.ErrorLevel, 3)
+// warn(zerolog.WarnLevel, 2)
+// info(zerolog.InfoLevel, 1)
+// debug(zerolog.DebugLevel, 0)
+// trace(zerolog.TraceLevel, -1)
+
+var level int8 = 1
+
 func init() {
 	timeFormat := "2006-01-02 15:04:05"
 	zerolog.TimeFieldFormat = timeFormat
@@ -22,6 +32,8 @@ func init() {
 		fmt.Println("Mkdir failed, err:", err)
 		return
 	}
+
+	zerolog.SetGlobalLevel(zerolog.Level(level))
 
 	fileName := logDir + time.Now().Format("2006-01-02") + ".log"
 	logFile, _ := os.OpenFile(fileName, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
@@ -40,4 +52,8 @@ func init() {
 	}
 	multi := zerolog.MultiLevelWriter(consoleWriter, logFile)
 	Logger = zerolog.New(multi).With().Timestamp().Logger()
+}
+
+func setLoggerLevel(inputLevel int8) {
+	level = inputLevel
 }
