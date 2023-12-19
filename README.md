@@ -29,3 +29,11 @@ Usage of benchmark:
   -u int
         Number of logged-in users (default 500)
 ```
+
+# Command
+
+## Status Code -> GO (Code Generation)
+
+```
+go run ./cmd/errcode_generator/ ./etc/errcode/ ./pkg/errcode
+```

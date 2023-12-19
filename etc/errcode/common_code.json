@@ -1,0 +1,47 @@
+[
+    {
+        "status_name": "Success",
+        "status_code": "0",
+        "status_msg": "Success"
+    },
+    {
+        "status_name": "ServerError",
+        "status_code": "10000000",
+        "status_msg": "Internal Server Error"
+    },
+    {
+        "status_name": "InvalidParams",
+        "status_code": "10000001",
+        "status_msg": "Invalid Parameters"
+    },
+    {
+        "status_name": "NotFound",
+        "status_code": "10000002",
+        "status_msg": "Not Found"
+    },
+    {
+        "status_name": "UnauthorizedAuthNotExist",
+        "status_code": "10000003",
+        "status_msg": "Authentication failed, corresponding AppKey and AppSecret not found"
+    },
+    {
+        "status_name": "UnauthorizedTokenError",
+        "status_code": "10000004",
+        "status_msg": "Authentication failed, Token error"
+    },
+    {
+        "status_name": "UnauthorizedTokenTimeout",
+        "status_code": "10000005",
+        "status_msg": "Authentication failed, Token timeout"
+    },
+    {
+        "status_name": "UnauthorizedTokenGenerate",
+        "status_code": "10000006",
+        "status_msg": "Authentication failed, Token generation failed"
+    },
+    {
+        "status_name": "TooManyRequests",
+        "status_code": "10000007",
+        "status_msg": "Too Many Requests"
+    }
+]

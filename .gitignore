@@ -18,3 +18,9 @@
 
 # chatroom
 # benchmark
+
+# code generation
+**/*_gen.go
+
+# backup files
+**/**.bak
